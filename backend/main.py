@@ -4,10 +4,12 @@ import sqlite3
 from typing import Optional
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from backend.config import CLASSES, DB_PATH
+from backend.config import CLASSES, DB_PATH, SAMPLE_LEAVES_DIR
 from backend.database import get_db, init_db
+from backend.data_fixtures import seed_data
 from backend.ml_engine import engine
 
 app = FastAPI(
@@ -25,9 +27,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount sample leaves directory as static route
+app.mount("/sample-leaves", StaticFiles(directory=SAMPLE_LEAVES_DIR), name="sample-leaves")
+
 @app.on_event("startup")
 def startup_event():
     init_db()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM advisories")
+    count = cursor.fetchone()[0]
+    conn.close()
+    if count == 0:
+        print("Advisories table empty. Seeding database with ICAR data fixtures...")
+        seed_data()
     print("CropGuard AI FastAPI Backend successfully started!")
 
 # Request Models

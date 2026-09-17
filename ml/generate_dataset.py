@@ -4,11 +4,11 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 CLASSES = [
-    "Tomato_Early_Blight",
-    "Tomato_Late_Blight",
-    "Potato_Early_Blight",
     "Corn_Common_Rust",
-    "Healthy_Leaf"
+    "Healthy_Leaf",
+    "Potato_Early_Blight",
+    "Tomato_Early_Blight",
+    "Tomato_Late_Blight"
 ]
 
 DATASET_DIR = os.path.join(os.path.dirname(__file__), "dataset")

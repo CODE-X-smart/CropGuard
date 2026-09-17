@@ -28,49 +28,19 @@ export default function ImageDiagnosisCard({ crop, district, t, onDiagnosisCompl
     setSelectedSample(sample.filename);
     setLoading(true);
     try {
-      // Fetch sample image asset from backend or synthetic sample
-      const res = await fetch(`http://127.0.0.1:8000/health`); // Ping backend check
-      // Create canvas image blob dynamically for testing
-      const canvas = document.createElement('canvas');
-      canvas.width = 224;
-      canvas.height = 224;
-      const ctx = canvas.getContext('2d');
+      // Fetch actual sample leaf image asset from FastAPI static files
+      const imgUrl = `http://127.0.0.1:8000/sample-leaves/${sample.filename}`;
+      const res = await fetch(imgUrl);
+      if (!res.ok) throw new Error(`Failed to fetch sample image: ${res.statusText}`);
       
-      // Draw synthetic test visual leaf pattern matching sample
-      ctx.fillStyle = '#1e40af';
-      ctx.fillRect(0, 0, 224, 224);
-      ctx.fillStyle = '#15803d';
-      ctx.beginPath();
-      ctx.ellipse(112, 112, 80, 60, 0, 0, 2 * Math.PI);
-      ctx.fill();
-
-      if (sample.filename.includes('early_blight')) {
-        ctx.fillStyle = '#451a03';
-        ctx.beginPath();
-        ctx.arc(100, 100, 20, 0, 2 * Math.PI);
-        ctx.fill();
-      } else if (sample.filename.includes('late_blight')) {
-        ctx.fillStyle = '#1c1917';
-        ctx.beginPath();
-        ctx.ellipse(120, 120, 30, 20, 0, 0, 2 * Math.PI);
-        ctx.fill();
-      } else if (sample.filename.includes('rust')) {
-        ctx.fillStyle = '#c2410c';
-        for (let i = 0; i < 10; i++) {
-          ctx.beginPath();
-          ctx.arc(70 + i * 10, 80 + (i % 3) * 20, 6, 0, 2 * Math.PI);
-          ctx.fill();
-        }
-      }
-
-      canvas.toBlob(async (blob) => {
-        const dummyFile = new File([blob], sample.filename, { type: 'image/jpeg' });
-        setFile(dummyFile);
-        setPreviewUrl(canvas.toDataURL());
-        await runDiagnosis(dummyFile, sample.crop);
-      }, 'image/jpeg');
+      const blob = await res.blob();
+      const sampleFile = new File([blob], sample.filename, { type: 'image/jpeg' });
+      setFile(sampleFile);
+      setPreviewUrl(URL.createObjectURL(blob));
+      await runDiagnosis(sampleFile, sample.crop);
     } catch (err) {
-      console.error(err);
+      console.error("Error loading sample image:", err);
+      alert("Could not load sample image from backend server. Please ensure backend is running.");
       setLoading(false);
     }
   };

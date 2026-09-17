@@ -9,11 +9,11 @@ from torchvision import transforms, datasets, models
 from sklearn.metrics import classification_report, confusion_matrix
 
 CLASSES = [
-    "Tomato_Early_Blight",
-    "Tomato_Late_Blight",
-    "Potato_Early_Blight",
     "Corn_Common_Rust",
-    "Healthy_Leaf"
+    "Healthy_Leaf",
+    "Potato_Early_Blight",
+    "Tomato_Early_Blight",
+    "Tomato_Late_Blight"
 ]
 
 DATASET_DIR = os.path.join(os.path.dirname(__file__), "dataset")
@@ -54,6 +54,7 @@ def train_model():
     # Load full dataset
     full_dataset = datasets.ImageFolder(DATASET_DIR, transform=transform_train)
     class_to_idx = full_dataset.class_to_idx
+    dataset_classes = full_dataset.classes
     print(f"Dataset classes mapped: {class_to_idx}")
 
     # Split train/val
@@ -135,7 +136,7 @@ def train_model():
             all_targets.extend(labels.cpu().numpy())
 
     # Generate classification report and confusion matrix
-    target_names = [CLASSES[idx] for idx in range(len(CLASSES))]
+    target_names = [dataset_classes[idx] for idx in range(len(dataset_classes))]
     report = classification_report(all_targets, all_preds, target_names=target_names, output_dict=True)
     conf_mat = confusion_matrix(all_targets, all_preds).tolist()
 
@@ -145,7 +146,7 @@ def train_model():
     # Save model weights
     torch.save({
         'model_state_dict': model.state_dict(),
-        'classes': CLASSES,
+        'classes': dataset_classes,
         'class_to_idx': class_to_idx
     }, MODEL_SAVE_PATH)
     print(f"Saved trained PyTorch model to: {MODEL_SAVE_PATH}")

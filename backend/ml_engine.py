@@ -34,7 +34,11 @@ class MLInferenceEngine:
         if os.path.exists(STAGE_B_MODEL_PATH):
             print(f"Loading Stage B CNN weights from {STAGE_B_MODEL_PATH}...")
             checkpoint = torch.load(STAGE_B_MODEL_PATH, map_location=self.device)
-            self.classes = checkpoint.get('classes', CLASSES)
+            if 'class_to_idx' in checkpoint and isinstance(checkpoint['class_to_idx'], dict):
+                c2i = checkpoint['class_to_idx']
+                self.classes = [k for k, v in sorted(c2i.items(), key=lambda item: item[1])]
+            else:
+                self.classes = checkpoint.get('classes', CLASSES)
             
             model = models.mobilenet_v3_small(weights=None, num_classes=len(self.classes))
             model.load_state_dict(checkpoint['model_state_dict'])
